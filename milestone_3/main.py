@@ -1,8 +1,13 @@
 from fastapi import FastAPI
 from milestone_3.routes import router as auth_router
 from milestone_3.ai_routes import router as ai_router
+from milestone_3.init_db import init_db
 
 app = FastAPI(title="Company Chatbot Backend")
+@app.on_event("startup")
+def startup_event():
+    init_db()
+
 
 app.include_router(auth_router)
 app.include_router(ai_router)
