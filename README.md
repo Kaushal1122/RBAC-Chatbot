@@ -1,4 +1,13 @@
-<<<<<<< HEAD
+---
+title: Company Internal Chatbot
+emoji: 🤖
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 ## 📌 Problem Statement
 
 The goal of this project is to build a secure internal chatbot system that processes natural
@@ -691,16 +700,3 @@ The system fulfills all project requirements and serves as a strong foundation f
 **Author:** Kaushal Kumar  
 **Project Type:** Company Internal Chatbot with RBAC & RAG  
 **Tech Stack:** FastAPI · Streamlit · ChromaDB · Sentence Transformers · FLAN-T5
-=======
----
-title: Chatbot
-emoji: 🏆
-colorFrom: blue
-colorTo: purple
-sdk: docker
-pinned: false
-license: mit
----
-
-Check out the configuration reference at https://huggingface.co/docs/hub/spaces-config-reference
->>>>>>> 256a31e3d4d6b436de9bc5a618f86f001fa047e0
