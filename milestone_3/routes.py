@@ -171,6 +171,48 @@ def delete_user(
 
     return {"message": "User deleted successfully"}
 
+@router.get("/accessible-documents")
+def get_accessible_documents(current_user: dict = Depends(get_current_user)):
+
+    import os
+
+    base_path = os.path.join(os.getcwd(), "data", "raw")
+
+    if not os.path.exists(base_path):
+        return {}
+
+    role = current_user["role"].lower()
+
+    role_folder_map = {
+        "engineering": ["engineering", "general"],
+        "finance": ["finance", "general"],
+        "hr": ["hr", "general"],
+        "marketing": ["marketing", "general"],
+        "employees": ["general"],
+        "c-level": ["engineering", "finance", "hr", "marketing", "general"]
+    }
+
+    requested_folders = role_folder_map.get(role, [])
+    result = {}
+
+    actual_folders = os.listdir(base_path)
+
+    for req_folder in requested_folders:
+        for actual in actual_folders:
+            if actual.lower() == req_folder.lower():
+                folder_path = os.path.join(base_path, actual)
+
+                if os.path.isdir(folder_path):
+                    clean_files = []
+
+                    for file in os.listdir(folder_path):
+                        if file.endswith(".md") or file.endswith(".csv"):
+                            clean_files.append(file)
+
+                    if clean_files:
+                        result[actual.capitalize()] = clean_files
+
+    return result
 
 
 

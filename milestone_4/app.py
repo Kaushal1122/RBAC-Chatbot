@@ -1,8 +1,10 @@
 import streamlit as st
 import requests
-import os
 
-API_URL = "http://127.0.0.1:8000"
+# ===============================
+# 🔥 BACKEND SPACE URL
+# ===============================
+API_URL = "https://kaushal1528-chatbot.hf.space"
 
 st.set_page_config(
     page_title="Company Internal Chatbot",
@@ -17,49 +19,9 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
 
-# ---------------- Helper: Get Accessible Files ----------------
-def get_accessible_files(role):
-    base_path = os.path.join(os.getcwd(), "data", "raw")
-
-    if not os.path.exists(base_path):
-        return {}
-
-    role = role.lower()
-
-    role_folder_map = {
-        "engineering": ["engineering", "general"],
-        "finance": ["finance", "general"],
-        "hr": ["hr", "general"],
-        "marketing": ["marketing", "general"],
-        "employees": ["general"],
-        "c-level": ["engineering", "finance", "hr", "marketing", "general"]
-    }
-
-    requested_folders = role_folder_map.get(role, [])
-    result = {}
-
-    actual_folders = os.listdir(base_path)
-
-    for req_folder in requested_folders:
-        for actual in actual_folders:
-            if actual.lower() == req_folder.lower():
-                folder_path = os.path.join(base_path, actual)
-
-                if os.path.isdir(folder_path):
-                    clean_files = []
-
-                    for file in os.listdir(folder_path):
-                        if file.endswith(".md") or file.endswith(".csv"):
-                            clean_files.append(file)
-
-                    if clean_files:
-                        result[actual.capitalize()] = clean_files
-
-    return result
-
-
 # ================= LOGIN UI =================
 if st.session_state.token is None:
+
     st.title("🔐 Company Internal Chatbot")
     st.subheader("Login")
 
@@ -67,18 +29,21 @@ if st.session_state.token is None:
     password = st.text_input("Password", type="password")
 
     if st.button("Login"):
+
         try:
             with st.spinner("Connecting to backend..."):
                 response = requests.post(
                     f"{API_URL}/login",
                     data={"username": username, "password": password},
-                    timeout=25
+                    timeout=30
                 )
+
         except requests.exceptions.ConnectionError:
-            st.error("❌ Backend server is not running.")
+            st.error("❌ Backend server is not reachable.")
             st.stop()
+
         except requests.exceptions.ReadTimeout:
-            st.error("⏳ Backend is still starting.")
+            st.error("⏳ Backend is still starting. Please wait.")
             st.stop()
 
         if response.status_code == 200:
@@ -92,16 +57,17 @@ if st.session_state.token is None:
 
 # ================= LOGGED-IN STATE =================
 else:
+
     headers = {
         "Authorization": f"Bearer {st.session_state.token}"
     }
 
-    # Fetch user info
+    # -------- Fetch User Info --------
     try:
         response = requests.get(
             f"{API_URL}/me",
             headers=headers,
-            timeout=25
+            timeout=30
         )
     except:
         st.error("❌ Backend not responding.")
@@ -114,36 +80,40 @@ else:
 
     user = response.json()
 
-    # ---------------- Sidebar ----------------
+    # ================= Sidebar =================
     st.sidebar.title("👤 User Info")
     st.sidebar.write(f"**Username:** {user['username']}")
     st.sidebar.write(f"**Role:** {user['role']}")
 
-    # 📁 Accessible Documents
+    # ================= Accessible Documents =================
     st.sidebar.markdown("---")
     st.sidebar.subheader("📁 Accessible Documents")
 
-    accessible_files = get_accessible_files(user["role"])
+    try:
+        doc_response = requests.get(
+            f"{API_URL}/accessible-documents",
+            headers=headers,
+            timeout=30
+        )
 
-    if accessible_files:
-        for department, files in accessible_files.items():
-            with st.sidebar.expander(f"📂 {department}", expanded=False):
-                for file in files:
-                    st.markdown(f"📄 {file}")
-    else:
-        st.sidebar.write("No accessible files.")
+        if doc_response.status_code == 200:
+            accessible_files = doc_response.json()
 
-    # 🕒 Chat History
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("🕒 Chat History (Session)")
+            if accessible_files:
+                for department, files in accessible_files.items():
+                    with st.sidebar.expander(f"📂 {department}", expanded=False):
+                        for file in files:
+                            st.markdown(f"📄 {file}")
+            else:
+                st.sidebar.write("No accessible files.")
 
-    if st.session_state.chat_history:
-        for chat in st.session_state.chat_history:
-            st.sidebar.write(f"• {chat['query']}")
-    else:
-        st.sidebar.write("No queries yet.")
+        else:
+            st.sidebar.error("Could not fetch documents.")
 
-    # ---------------- ADMIN PANEL (C-Level Only) ----------------
+    except:
+        st.sidebar.error("Backend not responding.")
+
+    # ================= Admin Panel =================
     if user["role"].lower() == "c-level":
 
         st.sidebar.markdown("---")
@@ -202,16 +172,18 @@ else:
                 else:
                     st.sidebar.error(response.json().get("detail", "Error"))
 
-    # ---------------- Logout (For All Users) ----------------
+    # ================= Logout =================
+    st.sidebar.markdown("---")
     if st.sidebar.button("Logout"):
         st.session_state.token = None
         st.session_state.chat_history = []
         st.success("Logged out successfully")
         st.stop()
 
-    # ---------------- Chat UI (For All Users) ----------------
+    # ================= Chat UI =================
     st.title("💬 Company Internal Chatbot")
 
+    # Display chat history
     for chat in st.session_state.chat_history:
         with st.chat_message("user"):
             st.write(chat["query"])
@@ -224,20 +196,27 @@ else:
                 for src in chat["sources"]:
                     st.write(f"- {src}")
 
+    # Chat input
     query = st.chat_input("Ask something about company documents...")
 
     if query:
+
         with st.chat_message("user"):
             st.write(query)
 
-        chat_response = requests.post(
-            f"{API_URL}/chat",
-            json={"query": query},
-            headers=headers,
-            timeout=35
-        )
+        try:
+            chat_response = requests.post(
+                f"{API_URL}/chat",
+                json={"query": query},
+                headers=headers,
+                timeout=40
+            )
+        except:
+            st.error("Backend not responding.")
+            st.stop()
 
         if chat_response.status_code == 200:
+
             data = chat_response.json()
 
             with st.chat_message("assistant"):
@@ -259,6 +238,7 @@ else:
             st.error("🚫 Not authorized.")
         else:
             st.error("Something went wrong.")
+
 
 
 
