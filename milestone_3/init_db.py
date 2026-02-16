@@ -4,11 +4,11 @@ from milestone_3.models import hash_password
 
 DB_PATH = Path(__file__).parent / "users.db"
 
-def main():
+def init_db():   # 👈 renamed from main()
+
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    # Recreate table
     cursor.execute("DROP TABLE IF EXISTS users")
     cursor.execute("""
     CREATE TABLE users (
@@ -40,8 +40,4 @@ def main():
     conn.commit()
     conn.close()
 
-    print("Database re-initialized with HASHED passwords.")
-    print("DB path:", DB_PATH)
-
-if __name__ == "__main__":
-    main()
+    print("Database initialized successfully.")
