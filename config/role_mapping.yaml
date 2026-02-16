@@ -1,0 +1,20 @@
+roles:
+  Finance:
+    folders: ["data/raw/finance"]
+    allowed_roles: ["Finance", "C-Level"]
+
+  HR:
+    folders: ["data/raw/hr"]
+    allowed_roles: ["HR", "C-Level"]
+
+  Marketing:
+    folders: ["data/raw/marketing"]
+    allowed_roles: ["Marketing", "C-Level"]
+
+  Engineering:
+    folders: ["data/raw/engineering"]
+    allowed_roles: ["Engineering", "C-Level"]
+
+  General:
+    folders: ["data/raw/general"]
+    allowed_roles: ["Employees", "Finance", "HR", "Marketing", "Engineering", "C-Level"]

@@ -1,0 +1,23 @@
+# Virtual environment
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Chroma / Vector DB
+data/chroma_db/
+data/processed/
+
+# SQLite
+*.sqlite3
+*.db
+
+# Binary blobs
+*.bin
+
+# Screenshots
+screenshots/
+
+# Logs
+*.log
