@@ -3,12 +3,19 @@ import torch
 
 MODEL_NAME = "google/flan-t5-base"
 
-print("Loading FLAN-T5 model (Transformers v5)...")
+tokenizer = None
+model = None
 
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
+def load_model():
+    global tokenizer, model
+    if tokenizer is None or model is None:
+        print("Loading FLAN-T5 model...")
+        tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+        model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
 
 def generate_answer(prompt: str):
+    load_model()   # 🔥 load only when first needed
+
     inputs = tokenizer(
         prompt,
         return_tensors="pt",
